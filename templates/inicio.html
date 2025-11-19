@@ -1,0 +1,53 @@
+<!-- templates/inicio.html -->
+
+{% extends 'base.html' %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block content %}
+
+<!-- Bloque para mostrar mensajes flash (éxito, error, etc.) -->
+{% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<div class="container mt-5">
+    <div class="alert alert-info">
+        <h3>Bienvenido, {{ request.user.first_name|default:request.user.username }}</h3>
+
+        {% if request.user.is_superuser %}
+            <p>Acceso de administrador completo. Puedes gestionar todo el sistema.</p>
+        {% elif request.user.rol == 'supervisor' %}
+            <p>Eres supervisor. Tienes acceso para monitorear a los visitadores y revisar sus actividades.</p>
+        {% elif request.user.rol == 'visitador' %}
+            <p>Eres visitador. Puedes registrar tus visitas, asistencia, prescripciones y consultar catálogos.</p>
+        {% else %}
+            <p>Tu rol aún no ha sido asignado. Contacta al administrador para obtener acceso completo.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="container text-center mt-4">
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{% url 'registrar_asistencia' %}" class="btn btn-primary btn-lg">
+            Registrar Asistencia
+        </a>
+        <a href="{% url 'crear_ruta' %}" class="btn btn-primary btn-lg">
+            Gestionar Rutas
+        </a>
+        <a href="{% url 'visitas:gestionar_visitas_medicas' %}" class="btn btn-primary btn-lg">
+            Gestionar Visitas Médicas
+        </a>
+        <a href="{% url 'visitas:ver_historial' %}" class="btn btn-primary btn-lg">
+    Historial de Visitas
+    </a>
+    </div>
+</div>
+
+{% endblock %}

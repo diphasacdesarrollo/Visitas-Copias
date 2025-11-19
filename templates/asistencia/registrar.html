@@ -1,0 +1,129 @@
+<!-- templates/asistencia/registrar.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">📍 Registrar Asistencia</h2>
+
+    {% if ultima_accion %}
+        <p class="text-center text-muted">
+        Última acción: <strong>{{ ultima_accion.0 }}</strong> - {{ ultima_accion.1|date:"d/m/Y H:i:s" }}
+        </p>
+    {% endif %}
+
+
+    <div class="alert alert-info text-center">
+        <strong>Ubicación actual:</strong> 
+        <span id="ubicacionTexto">Cargando...</span>
+        <a id="linkUbicacion" href="#" target="_blank" style="display:none; margin-left: 10px;">
+            Ver en Google Maps
+        </a>
+    </div>
+
+<form method="post" class="text-center">
+    {% csrf_token %}
+    <input type="hidden" name="ubicacion" id="ubicacionInput">
+
+    <button type="submit" name="accion" value="ingreso" class="btn btn-success me-2"
+        {% if ya_ingreso %}disabled{% endif %}>
+        ✅ Ingreso
+    </button>
+
+    <button type="submit" name="accion" value="salida" class="btn btn-danger me-2"
+        {% if not ya_ingreso or ya_salida %}disabled{% endif %}>
+        ⛔ Salida
+    </button>
+
+    <a href="{% url 'inicio' %}" class="btn btn-secondary">
+        🏠 Inicio
+    </a>
+</form>
+<hr class="my-5">
+{% comment %} Calcular navegación de semanas {% endcomment %}
+{% with semana_anterior=semana_actual|add:"-1" semana_siguiente=semana_actual|add:"1" %}
+<div class="d-flex justify-content-between mb-3">
+    <a href="?semana={{ semana_anterior }}&año={{ año_actual }}" class="btn btn-outline-primary">
+        ⬅ Semana anterior
+    </a>
+    <span class="fw-bold align-self-center">Semana {{ semana_actual }} - {{ año_actual }}</span>
+    <a href="?semana={{ semana_siguiente }}&año={{ año_actual }}" class="btn btn-outline-primary">
+        Semana siguiente ➡
+    </a>
+</div>
+{% endwith %}
+<h3 class="text-center mb-3">🗓️ Historial de la semana {{ semana_actual }} - {{ año_actual }}</h3>
+
+{% if asistencias_semana %}
+<table class="table table-bordered table-hover text-center">
+  <thead class="table-light">
+    <tr>
+      <th>📆 Fecha Ingreso</th>
+      <th>🕐 Ingreso</th>
+      <th>📍 Ubicación Ingreso</th>
+      <th>📆 Fecha Salida</th>       <!-- NUEVO -->
+      <th>🕔 Hora Salida</th>
+      <th>📍 Ubicación Salida</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for asistencia in asistencias_semana %}
+    <tr>
+      <td>{{ asistencia.fecha_ingreso|date:"d/m/Y" }}</td>
+      <td>{{ asistencia.fecha_ingreso|date:"H:i:s" }}</td>
+      <td>{{ asistencia.ubicacion_ingreso|default:"—" }}</td>
+
+      <!-- NUEVO: fecha de salida -->
+      <td>
+        {% if asistencia.fecha_salida %}
+          {{ asistencia.fecha_salida|date:"d/m/Y" }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+
+      <!-- ya estaba: hora de salida -->
+      <td>
+        {% if asistencia.fecha_salida %}
+          {{ asistencia.fecha_salida|date:"H:i:s" }}
+        {% else %}
+          —
+        {% endif %}
+      </td>
+
+      <td>{{ asistencia.ubicacion_salida|default:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% else %}
+    <p class="text-center text-muted">No hay asistencias registradas esta semana.</p>
+{% endif %}
+
+</div>
+
+<script>
+navigator.geolocation.getCurrentPosition(
+    function (position) {
+        const lat = position.coords.latitude.toFixed(6);
+        const lon = position.coords.longitude.toFixed(6);
+        const coords = `${lat}, ${lon}`;
+        document.getElementById("ubicacionTexto").innerText = coords;
+        document.getElementById("ubicacionInput").value = coords;
+
+        const link = document.getElementById("linkUbicacion");
+        link.href = `https://www.google.com/maps?q=${coords}`;
+        link.style.display = 'inline';
+    },
+    function (error) {
+        const mensaje = {
+            1: "Permiso denegado para acceder a la ubicación.",
+            2: "La ubicación no está disponible.",
+            3: "La solicitud de ubicación ha expirado."
+        }[error.code] || "Error desconocido.";
+        alert("⚠️ " + mensaje);
+        document.getElementById("ubicacionTexto").innerText = "No disponible";
+    }
+);
+</script>
+{% endblock %}

@@ -1,0 +1,156 @@
+<!-- templates/visitas/agregar_productos.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Visita en curso</h2>
+    <p class="text-muted">
+        <strong>Doctor ID:</strong> {{ draft.doctor_id }} ·
+        <strong>Inicio:</strong> {{ draft.fecha_inicio_iso|date:"d/m/Y H:i" }}
+        {% if draft.ubicacion_inicio %}
+            · <strong>Ubicación:</strong>
+            <a href="https://www.google.com/maps?q={{ draft.ubicacion_inicio }}" target="_blank">
+                {{ draft.ubicacion_inicio }}
+            </a>
+        {% endif %}
+    </p>
+
+    <hr>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- ✅ Productos Presentados -->
+        <h5 class="mt-4 mb-2">📄 Productos Presentados</h5>
+        <div class="row">
+            {% for producto in productos_promocionales %}
+                <div class="col-md-4 mb-3">
+                    <div class="card p-3 text-center shadow-sm border-0 rounded-4 h-100 hover-shadow" style="transition: transform 0.2s;">
+                        <label class="w-100">
+                            {% comment %} --- Carga directa desde Cloudinary --- {% endcomment %}
+{% if "DUO DAPHA 10" in producto.nombre %}
+  <img src="https://res.cloudinary.com/drf02su75/image/upload/f_auto,q_auto,w_600/duo-dapha-10_dxehgi.png"
+       alt="{{ producto.nombre }}" class="img-fluid mb-2" style="height:140px;object-fit:contain;">
+{% elif "DUO DAPHA 5" in producto.nombre %}
+  <img src="https://res.cloudinary.com/drf02su75/image/upload/f_auto,q_auto,w_600/duo-dapha-5_tb3wpq.png"
+       alt="{{ producto.nombre }}" class="img-fluid mb-2" style="height:140px;object-fit:contain;">
+{% elif "DAPHA 10" in producto.nombre %}
+  <img src="https://res.cloudinary.com/drf02su75/image/upload/f_auto,q_auto,w_600/dapha-10_lws33j.png"
+       alt="{{ producto.nombre }}" class="img-fluid mb-2" style="height:140px;object-fit:contain;">
+{% else %}
+  <div class="text-muted">Sin imagen</div>
+{% endif %}
+                            <br>
+                            <input type="checkbox" name="productos_presentados" value="{{ producto.id }}"
+                                   {% if producto.id in productos_presentados_ids %}checked{% endif %}>
+                            <strong class="d-block mt-2">{{ producto.nombre }}</strong>
+                        </label>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <hr>
+
+        <!-- ✅ Entregas -->
+        <h4 class="mt-4">🎁 Entregas: Muestras Médicas y Merchandising</h4>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="tipo_entrega">Tipo:</label>
+                <select id="tipo_entrega" name="tipo_entrega" class="form-select" onchange="filtrarProductos()">
+                    <option value="">-- Seleccionar --</option>
+                    <option value="muestra">Muestra Médica</option>
+                    <option value="merch">Merchandising</option>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label for="producto_entrega">Producto:</label>
+                <select id="producto_entrega" name="producto_entrega" class="form-select" disabled>
+                    <option value="">Seleccione un tipo primero</option>
+                    {% for producto in productos_muestra %}
+                        <option value="{{ producto.id }}" data-tipo="muestra">{{ producto.nombre }} - {{ producto.presentacion }}</option>
+                    {% endfor %}
+                    {% for producto in productos_merch %}
+                        <option value="{{ producto.id }}" data-tipo="merch">{{ producto.nombre }} - {{ producto.presentacion }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="cantidad_entrega">Cantidad:</label>
+                <input type="number" id="cantidad_entrega" name="cantidad_entrega" class="form-control" min="1">
+            </div>
+            <div class="col-md-1 d-grid align-items-end">
+                <button type="submit" name="accion" value="agregar_entrega" class="btn btn-success">Agregar</button>
+            </div>
+        </div>
+
+        <!-- 📦 Productos Entregados -->
+        <h4 class="mt-4">📦 Productos Entregados</h4>
+        <table class="table table-bordered mt-2">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Tipo</th>
+                </tr>
+            </thead>
+<tbody>
+  {% for e in entregas %}
+    {% with info=producto_nombres|get_item:e.producto_id %}
+      <tr>
+        <td>
+          {{ info.nombre|default:"Producto" }}
+          {% if info.presentacion %}<span class="text-muted">— {{ info.presentacion }}</span>{% endif %}
+        </td>
+        <td>{{ e.cantidad }}</td>
+        <td>{{ e.tipo_entrega|title }}</td>
+      </tr>
+    {% endwith %}
+  {% empty %}
+      <tr><td colspan="3" class="text-center text-muted">Sin entregas aún</td></tr>
+  {% endfor %}
+</tbody>
+
+        </table>
+
+        <hr>
+
+        <!-- ✍️ Comentarios -->
+        <h4 class="mt-4">📝 Comentarios</h4>
+        <div class="mb-3">
+            <label for="comentarios">Comentarios:</label>
+            <textarea id="comentarios" name="comentarios" class="form-control" rows="3">{{ comentarios|default_if_none:"" }}</textarea>
+        </div>
+
+        <!-- ✅ Botones Finalizar / Cancelar -->
+        <div class="d-flex justify-content-end gap-2 mt-3">
+            <button type="submit" name="accion" value="cancelar" class="btn btn-secondary">Cancelar Visita</button>
+            <button type="submit" name="accion" value="finalizar" class="btn btn-danger">Finalizar Visita</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filtrarProductos() {
+    const tipoSeleccionado = document.getElementById('tipo_entrega').value;
+    const selectProducto = document.getElementById('producto_entrega');
+
+    selectProducto.disabled = tipoSeleccionado === "";
+
+    for (let i = 0; i < selectProducto.options.length; i++) {
+        const option = selectProducto.options[i];
+        const tipo = option.getAttribute('data-tipo');
+        if (tipo === tipoSeleccionado || option.value === "") {
+            option.hidden = false;
+        } else {
+            option.hidden = true;
+        }
+    }
+    selectProducto.value = "";
+}
+</script>
+{% endblock %}

@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-4">Crear Ruta</h2>
+  <a href="{% url 'inicio' %}" class="btn btn-secondary mb-4">🏠 Inicio</a>
+
+  {# Mensajes flash #}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} mensaje-temporal">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {# ================== FILTROS POR ZONA ================== #}
+  <form method="get" id="form-filtros" class="row g-3 mb-4">
+    {% if request.GET.visitador_id %}
+      <input type="hidden" name="visitador_id" value="{{ request.GET.visitador_id }}">
+    {% endif %}
+
+    <div class="col-md-4">
+      <label for="departamento" class="form-label">Departamento:</label>
+      <select name="departamento" id="departamento" class="form-select" onchange="this.form.submit()">
+        <option value="">-- Todos los departamentos --</option>
+        {% for d in departamentos %}
+          <option value="{{ d.id }}" {% if departamento_actual == d.id %}selected{% endif %}>{{ d.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label for="provincia" class="form-label">Provincia:</label>
+      <select name="provincia" id="provincia" class="form-select" onchange="this.form.submit()" {% if not departamento_actual %}disabled{% endif %}>
+        <option value="">-- Todas las provincias --</option>
+        {% for p in provincias %}
+          <option value="{{ p.id }}" {% if provincia_actual == p.id %}selected{% endif %}>{{ p.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label for="distrito" class="form-label">Distrito:</label>
+      <select name="distrito" id="distrito" class="form-select" onchange="this.form.submit()" {% if not provincia_actual %}disabled{% endif %}>
+        <option value="">-- Todos los distritos --</option>
+        {% for d in distritos %}
+          <option value="{{ d.id }}" {% if distrito_actual == d.id %}selected{% endif %}>{{ d.nombre }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+
+  {# ============== SELECTOR DE VISITADOR (roles altos) ============== #}
+  {% if request.user.is_superuser or request.user.rol == 'supervisor' %}
+  <form method="get" class="mb-3" id="form-visitador">
+    {% if departamento_actual %}<input type="hidden" name="departamento" value="{{ departamento_actual }}">{% endif %}
+    {% if provincia_actual %}<input type="hidden" name="provincia" value="{{ provincia_actual }}">{% endif %}
+    {% if distrito_actual %}<input type="hidden" name="distrito" value="{{ distrito_actual }}">{% endif %}
+    {% if request.GET.busqueda %}<input type="hidden" name="busqueda" value="{{ request.GET.busqueda }}">{% endif %}
+    <label for="visitador_id" class="form-label">Seleccionar visitador:</label>
+    <select name="visitador_id" id="visitador_id" class="form-select" onchange="this.form.submit()" required>
+      <option value="">-- Selecciona un visitador --</option>
+      {% for usuario in visitadores %}
+        <option value="{{ usuario.id }}" {% if request.GET.visitador_id == usuario.id|stringformat:"s" %}selected{% endif %}>
+          {{ usuario.first_name }} {{ usuario.last_name }} ({{ usuario.username }})
+        </option>
+      {% endfor %}
+    </select>
+  </form>
+  {% endif %}
+
+  {# ================== BÚSQUEDA (se fusiona en JS) ================== #}
+  <form method="get" id="form-busqueda" class="mb-3">
+    {% if departamento_actual %}<input type="hidden" name="departamento" value="{{ departamento_actual }}">{% endif %}
+    {% if provincia_actual %}<input type="hidden" name="provincia" value="{{ provincia_actual }}">{% endif %}
+    {% if distrito_actual %}<input type="hidden" name="distrito" value="{{ distrito_actual }}">{% endif %}
+    {% if request.GET.visitador_id %}<input type="hidden" name="visitador_id" value="{{ request.GET.visitador_id }}">{% endif %}
+    <input type="text" name="busqueda" id="busquedaInput" class="form-control"
+           placeholder="Buscar por nombre o CMP" value="{{ request.GET.busqueda }}">
+  </form>
+
+  {# CTA Registrar Médico (oculto por ahora) #}
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <p class="mb-0"><strong>¿No encontró el médico a visitar?</strong></p>
+    <a href="{% url 'doctores:crear_doctor' %}" class="btn btn-outline-success btn-sm d-none">➕ Registrar Médico</a>
+  </div>
+
+  {# Leyenda semáforo #}
+  <div class="mb-3 small">
+    <span class="badge text-bg-success">Completado</span>
+    <span class="badge text-bg-warning">Pendiente</span>
+    <span class="badge text-bg-danger">Retraso</span>
+    <span class="badge text-bg-primary">Emergencia</span>
+    <span class="badge text-bg-light text-dark">Sin ruta</span>
+  </div>
+
+  {# ================== TABLA (partial) ================== #}
+  <div id="contenedor-tabla">
+    {% include 'rutas/tabla_doctores.html' %}
+  </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const formFiltros   = document.getElementById("form-filtros");
+  const formBusqueda  = document.getElementById("form-busqueda");
+  const contenedor    = document.getElementById("contenedor-tabla");
+  const inputBusqueda = document.getElementById("busquedaInput");
+
+  function buildParams() {
+    const params = new URLSearchParams(new FormData(formFiltros));
+    for (const [k, v] of new FormData(formBusqueda).entries()) params.set(k, v);
+    params.delete('page'); // al cambiar búsqueda, volver a la primera página
+    return params;
+  }
+
+  // Buscar mientras escribe
+  let t = null;
+  inputBusqueda.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      const params = buildParams();
+      fetch(window.location.pathname + "?" + params.toString(), {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      }).then(r => r.json()).then(data => { contenedor.innerHTML = data.html; });
+    }, 350);
+  });
+
+  // Mantener filtros al paginar (delegación)
+  document.addEventListener('click', function (e) {
+    const a = e.target.closest('.pagination a.page-link');
+    if (!a) return;
+    e.preventDefault();
+    const url = new URL(a.href);
+    const params = buildParams();
+    params.set('page', url.searchParams.get('page') || '1');
+    fetch(window.location.pathname + "?" + params.toString(), {
+      headers: { "X-Requested-With": "XMLHttpRequest" }
+    }).then(r => r.json()).then(data => { contenedor.innerHTML = data.html; });
+  });
+
+  // Autollenar fecha desde botones con data-fill-date
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-fill-date]');
+    if (!btn) return;
+    const input = btn.closest('tr').querySelector('input[type="date"]');
+    if (input) input.value = btn.dataset.fillDate;
+  });
+});
+</script>
+{% endblock %}
+{% endblock %}

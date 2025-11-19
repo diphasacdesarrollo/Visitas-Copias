@@ -1,0 +1,64 @@
+# Entorno virtual
+env/
+venv/
+ENV/
+.venv/
+.env/
+
+# Archivos de Python compilados
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de configuración local de Django (no subir a producción)
+visitas_medicas/settings_local.py
+
+# Archivos de configuración personal
+*.env
+.env.*
+*.local
+*.secret
+
+# Archivos de logs y bases de datos
+*.log
+*.sqlite3
+db.sqlite3
+
+# Archivos de migración innecesarios (si no quieres subirlos)
+# Puedes omitir esta línea si sí deseas subir tus migraciones
+# **/migrations/
+
+# Archivos temporales
+*.swp
+*.swo
+*.bak
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de tests
+.coverage
+htmlcov/
+.tox/
+.noseids
+.pytest_cache/
+junit.xml
+
+# Archivos generados por Django
+staticfiles/
+media/
+*.pot
+*.mo
+
+# Configuración de IDEs y editores
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Entorno de ejecución
+*.egg-info/
+*.eggs/
+dist/
+build/

@@ -1,0 +1,71 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Error de seguridad – Sesión expirada</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Arial, sans-serif;
+      background: #f8fafc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      max-width: 420px;
+      padding: 24px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0 0 12px;
+      color: #dc2626;
+    }
+    p {
+      font-size: 15px;
+      color: #374151;
+      margin: 0 0 16px;
+    }
+    .reason {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 20px;
+    }
+    a.button {
+      display: inline-block;
+      padding: 10px 18px;
+      background: #0d6efd;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: background 0.2s ease;
+    }
+    a.button:hover {
+      background: #0b5ed7;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>⚠️ Sesión expirada</h1>
+    <p>Por motivos de seguridad, tu sesión ya no es válida o el formulario se envió después de mucho tiempo.</p>
+    
+    {% if reason %}
+      <div class="reason">Detalles técnicos: {{ reason }}</div>
+    {% endif %}
+
+    <a href="{% url 'login' %}" class="button">Iniciar sesión nuevamente</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!--templates/usuarios/marcar_asistencia.html-->
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Registrar Asistencia</h2>
+
+<form method="post" id="asistenciaForm">
+    {% csrf_token %}
+    <input type="hidden" name="latitud" id="latitud">
+    <input type="hidden" name="longitud" id="longitud">
+    <button type="submit">Registrar Asistencia</button>
+</form>
+
+<script>
+navigator.geolocation.getCurrentPosition(function(position) {
+    document.getElementById("latitud").value = position.coords.latitude;
+    document.getElementById("longitud").value = position.coords.longitude;
+}, function(error) {
+    alert("No se pudo obtener la ubicación. Activa el GPS.");
+});
+</script>
+{% endblock %}

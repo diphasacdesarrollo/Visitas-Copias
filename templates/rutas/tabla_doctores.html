@@ -1,0 +1,107 @@
+<!--templates/rutas/tabla_docotres.html-->
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th style="width: 90px;">CMP</th>
+      <th>Nombre</th>
+      <th>Especialidad</th>
+      <th>Dirección</th>
+      <th>Ubigeo</th>
+      <th style="width: 170px;">Estado</th>
+      <th style="width: 300px;">Acción</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for d in doctores %}
+    <tr>
+      <td>{{ d.cmp }}</td>
+      <td>{{ d.nombre }}</td>
+      <td>{{ d.especialidad|default:"—" }}</td>
+      <td>{{ d.direccion|default:"—" }}</td>
+      <td>
+        {% if d.ubigeo and d.ubigeo.provincia and d.ubigeo.provincia.departamento %}
+          {{ d.ubigeo.provincia.departamento.nombre }}, {{ d.ubigeo.provincia.nombre }}, {{ d.ubigeo.nombre }}
+        {% else %}
+          {{ d.ubigeo|default:"—" }}
+        {% endif %}
+      </td>
+
+      {# ======= BADGE DE ESTADO (desde rutas_ruta) ======= #}
+      <td>
+        {% if d.ultimo_estatus %}
+          {% if d.ultimo_estatus == 'pendiente' %}
+            <span class="badge text-bg-warning" title="Ruta programada sin cubrir">
+              Pendiente{% if d.fecha_prox_ruta %} · {{ d.fecha_prox_ruta|date:"d/m" }}{% endif %}
+            </span>
+          {% elif d.ultimo_estatus == 'retraso' %}
+            <span class="badge text-bg-danger" title="Fecha vencida sin visita">
+              Retraso{% if d.fecha_ultima_ruta %} · {{ d.fecha_ultima_ruta|date:"d/m" }}{% endif %}
+            </span>
+          {% elif d.ultimo_estatus == 'completado' %}
+            <span class="badge text-bg-success" title="Última ruta cubierta">
+              Completado{% if d.fecha_ultima_ruta %} · {{ d.fecha_ultima_ruta|date:"d/m" }}{% endif %}
+            </span>
+          {% elif d.ultimo_estatus == 'emergencia' %}
+            <span class="badge text-bg-primary" title="Ruta de emergencia">Emergencia</span>
+          {% else %}
+            <span class="badge text-bg-secondary">{{ d.ultimo_estatus|capfirst }}</span>
+          {% endif %}
+        {% else %}
+          <span class="badge text-bg-light text-dark" title="No hay rutas registradas">Sin ruta</span>
+        {% endif %}
+      </td>
+
+      {# ======= ACCIÓN: crear ruta ======= #}
+      <td>
+        <form method="post" action="" class="row g-2 align-items-center">
+          {% csrf_token %}
+          <input type="hidden" name="doctor_id" value="{{ d.id }}">
+
+          {% if request.user.is_superuser or request.user.rol == 'supervisor' %}
+            {% if request.GET.visitador_id %}
+              <input type="hidden" name="visitador_id" value="{{ request.GET.visitador_id }}">
+            {% endif %}
+          {% endif %}
+
+          <div class="col-6 col-md-5">
+            <input type="date" name="fecha_visita" class="form-control form-control-sm">
+          </div>
+          <div class="col-6 col-md-7 d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary">Crear Ruta</button>
+            {% if d.fecha_prox_ruta %}
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                      data-fill-date="{{ d.fecha_prox_ruta|date:'Y-m-d' }}">Usar próxima</button>
+            {% elif d.fecha_ultima_ruta %}
+              <button type="button" class="btn btn-sm btn-outline-secondary"
+                      data-fill-date="{{ d.fecha_ultima_ruta|date:'Y-m-d' }}">Repetir última</button>
+            {% endif %}
+          </div>
+        </form>
+      </td>
+    </tr>
+    {% empty %}
+      <tr><td colspan="7" class="text-center text-muted">No se encontraron médicos.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{# ======= Paginación (simple, AJAX-friendly) ======= #}
+{% if doctores.paginator.num_pages > 1 %}
+<nav aria-label="Paginación" class="mt-2">
+  <ul class="pagination pagination-sm">
+    {% if doctores.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ doctores.previous_page_number }}">«</a>
+      </li>
+    {% endif %}
+    <li class="page-item disabled">
+      <span class="page-link">Página {{ doctores.number }} / {{ doctores.paginator.num_pages }}</span>
+    </li>
+    {% if doctores.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ doctores.next_page_number }}">»</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}

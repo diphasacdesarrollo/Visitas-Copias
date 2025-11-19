@@ -1,0 +1,136 @@
+<!--templates/doctores/crear_doctor.html-->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Agregar Nuevo Doctor</h2>
+    <form method="post" class="col-md-6">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label for="cmp" class="form-label">CMP</label>
+            <input type="text" name="cmp" id="cmp" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre</label>
+            <input type="text" name="nombre" id="nombre" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="apellido" class="form-label">Apellido</label>
+            <input type="text" name="apellido" id="apellido" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="especialidad" class="form-label">Especialidad</label>
+            <input type="text" name="especialidad" id="especialidad" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="direccion" class="form-label">Dirección</label>
+            <input type="text" name="direccion" id="direccion" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="categoria" class="form-label">Categoría</label>
+            <input type="number" name="categoria" id="categoria" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="fecha_nacimiento" class="form-label">Fecha de Nacimiento</label>
+            <input type="date" name="fecha_nacimiento" id="fecha_nacimiento" class="form-control">
+        </div>
+
+        <!-- Filtros de zona -->
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label for="departamento" class="form-label">Departamento:</label>
+        <select name="departamento" id="departamento" class="form-select" required>
+            <option value="">-- Departamento --</option>
+            {% for d in departamentos %}
+                <option value="{{ d.id }}" {% if departamento_actual == d.id %}selected{% endif %}>{{ d.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label for="provincia" class="form-label">Provincia:</label>
+        <select name="provincia" id="provincia" class="form-select" {% if not departamento_actual %}disabled{% endif %} required>
+            <option value="">-- Provincia --</option>
+            {% for p in provincias %}
+                <option value="{{ p.id }}" {% if provincia_actual == p.id %}selected{% endif %}>{{ p.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label for="distrito" class="form-label">Distrito:</label>
+        <select name="distrito" id="distrito" class="form-select" {% if not provincia_actual %}disabled{% endif %} required>
+            <option value="">-- Distrito --</option>
+            {% for d in distritos %}
+                <option value="{{ d.id }}" {% if distrito_actual == d.id %}selected{% endif %}>{{ d.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+
+
+        <button type="submit" class="btn btn-success">Guardar Doctor</button>
+        <a href="{% url 'crear_ruta' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const departamentoSelect = document.getElementById('departamento');
+    const provinciaSelect = document.getElementById('provincia');
+    const distritoSelect = document.getElementById('distrito');  // <- CORREGIDO
+
+    departamentoSelect.addEventListener('change', function () {
+        const departamentoId = this.value;
+        provinciaSelect.innerHTML = '<option value="">-- Selecciona una provincia --</option>';
+        distritoSelect.innerHTML = '<option value="">-- Selecciona un distrito --</option>';
+        provinciaSelect.disabled = true;
+        distritoSelect.disabled = true;
+
+        if (departamentoId) {
+            fetch(`/api/provincias/?departamento_id=${departamentoId}`)
+                .then(response => response.json())
+                .then(data => {
+                    provinciaSelect.disabled = false;
+                    data.forEach(provincia => {
+                        const option = document.createElement('option');
+                        option.value = provincia.id;
+                        option.textContent = provincia.nombre;
+                        provinciaSelect.appendChild(option);
+                    });
+                });
+        }
+    });
+
+    provinciaSelect.addEventListener('change', function () {
+        const provinciaId = this.value;
+        distritoSelect.innerHTML = '<option value="">-- Selecciona un distrito --</option>';
+        distritoSelect.disabled = true;
+
+        if (provinciaId) {
+            fetch(`/api/distritos/?provincia_id=${provinciaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    distritoSelect.disabled = false;
+                    data.forEach(distrito => {
+                        const option = document.createElement('option');
+                        option.value = distrito.id;
+                        option.textContent = distrito.nombre;
+                        distritoSelect.appendChild(option);
+                    });
+                });
+        }
+    });
+});
+</script>
+{% endblock %}

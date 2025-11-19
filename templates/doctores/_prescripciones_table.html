@@ -1,0 +1,41 @@
+<!-- templates/doctores/_prescripciones_table.html -->
+{# templates/doctores/_prescripciones_table.html #}
+<div class="mb-2">
+  <h5 class="mb-0">
+    Prescripciones de {{ doctor.apellido }} {{ doctor.nombre }}
+  </h5>
+  <small class="text-muted">CMP: {{ doctor.cmp|default:"-" }}</small>
+</div>
+
+<div class="table-responsive">
+  <table class="table table-sm table-hover align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Producto</th>
+        <th class="text-center">Ranking TAM</th>
+        <th class="text-end">MS TAM</th>
+        <th class="text-center">Ranking TRIM</th>
+        <th class="text-end">MS TRIM</th>
+        <th class="text-nowrap">Fecha</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in prescripciones %}
+      <tr>
+        <td class="text-wrap">{{ p.producto.nombre }}</td>
+        <td class="text-center">{{ p.rank_tam }}</td>
+        <td class="text-end">{{ p.ms_tam|floatformat:2 }}</td>
+        <td class="text-center">{{ p.rank_trim }}</td>
+        <td class="text-end">{{ p.ms_trim|floatformat:2 }}</td>
+        <td class="text-nowrap">{{ p.fecha_registro }}</td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="6" class="text-center text-muted py-4">
+          No hay prescripciones registradas.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

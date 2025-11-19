@@ -1,0 +1,232 @@
+<!-- templates/visitas/gestionar_visitas_medicas.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="text-primary mb-4">📋 Rutas Programadas</h2>
+
+  {% if rutas %}
+  <table class="table table-striped align-middle">
+    <thead class="table-dark">
+      <tr>
+        <th>CMP</th>
+        <th>Nombre</th>
+        <th>Especialidad</th>
+        <th>Fecha de Visita</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ruta in rutas %}
+      <tr>
+        <td>{{ ruta.doctor.cmp }}</td>
+        <td class="text-uppercase fw-semibold">{{ ruta.doctor.nombre }} {{ ruta.doctor.apellido }}</td>
+        <td>{{ ruta.doctor.especialidad }}</td>
+        <td>{{ ruta.fecha_visita|date:"b. d, Y" }}</td>
+
+        <!-- ===== Estado (seguro con firstof) ===== -->
+        <td>
+          {% firstof ruta.estado ruta.estatus ruta.status 'pendiente' as estado %}
+          {% with e=estado|lower %}
+            <span class="badge
+              {% if e == 'completado' or e == 'cubierto' %}
+                bg-success
+              {% elif e == 'pendiente' or e == 'planificado' %}
+                bg-warning text-dark
+              {% elif e == 'atrasado' or e == 'vencido' %}
+                bg-danger
+              {% else %}
+                bg-secondary
+              {% endif %}">
+              {% if e == 'completado' %}Cubierto{% else %}{{ estado|title }}{% endif %}
+            </span>
+          {% endwith %}
+        </td>
+
+        <!-- ===== Acciones (seguro con firstof) ===== -->
+        <td>
+          {% if request.user.rol == 'visitador' %}
+            {% firstof ruta.estado ruta.estatus ruta.status 'pendiente' as estado %}
+            {% with e=estado|lower %}
+              {% if e == 'completado' or e == 'cubierto' %}
+                <button class="btn btn-sm btn-secondary" disabled>✔ Completado</button>
+              {% else %}
+                {% if ruta.id %}
+                  <a href="{% url 'visitas:iniciar_visita' ruta.id %}"
+                     class="btn btn-sm btn-success">Iniciar Visita</a>
+                {% endif %}
+              {% endif %}
+            {% endwith %}
+          {% else %}
+            <span class="text-muted">No disponible</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="text-muted">No tienes rutas programadas actualmente.</p>
+  {% endif %}
+
+  <hr class="my-5">
+
+  <!-- ===================================================== -->
+  <!-- 🔍 BUSCADOR DE MÉDICOS -->
+  <!-- ===================================================== -->
+
+  <h4 class="mb-3">🔍 Buscar Médicos</h4>
+  <input type="text" id="filtroDoctor" class="form-control mb-3" placeholder="Buscar por nombre o CMP">
+
+  <style>
+    .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
+    .dot-verde{background:#16a34a}
+    .dot-amarillo{background:#f59e0b}
+    .dot-rojo{background:#ef4444}
+  </style>
+
+  <table class="table table-bordered table-hover align-middle" id="tablaDoctores">
+    <thead class="table-light">
+      <tr>
+        <th>Médico</th>
+        <th class="d-none d-md-table-cell">CMP</th>
+        <th class="d-none d-md-table-cell">Especialidad</th>
+        <th class="d-none d-md-table-cell">Visitas (mes)</th>
+        <th class="d-none d-md-table-cell">Última visita</th>
+        <th class="d-none d-md-table-cell">Estado</th>
+        <th class="text-center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for doctor in doctores %}
+      <tr>
+        <td>
+          <span class="dot dot-{{ doctor.semaforo|default:'rojo' }}"
+                title="{{ doctor.estado_label|default:'Pendiente' }}"></span>
+          <span class="fw-semibold text-uppercase">{{ doctor.apellido }} {{ doctor.nombre }}</span>
+          <div class="text-muted small d-md-none">
+            CMP {{ doctor.cmp }} · {{ doctor.especialidad }} · Visitas mes: {{ doctor.visitas_mes }}
+          </div>
+        </td>
+
+        <td class="d-none d-md-table-cell">{{ doctor.cmp }}</td>
+        <td class="d-none d-md-table-cell">{{ doctor.especialidad }}</td>
+        <td class="d-none d-md-table-cell">{{ doctor.visitas_mes }}</td>
+        <td class="d-none d-md-table-cell">
+          {{ doctor.ultima_visita|date:"d/m/Y" |default:"-" }}
+        </td>
+
+        <!-- Badge coherente -->
+        <td class="d-none d-md-table-cell">
+          {% if doctor.semaforo == 'verde' %}
+            <span class="badge bg-success">Cubierto</span>
+          {% elif doctor.semaforo == 'amarillo' %}
+            <span class="badge bg-warning text-dark">Planificado</span>
+          {% else %}
+            <span class="badge bg-danger">Pendiente</span>
+          {% endif %}
+        </td>
+
+        <!-- Acciones -->
+        <td class="text-center">
+          {% if request.user.rol == 'visitador' %}
+            {% if doctor.ruta_disponible %}
+              <a href="{% url 'visitas:iniciar_visita' doctor.ruta_disponible.id %}"
+                 class="btn btn-outline-success btn-sm">Iniciar Visita</a>
+              <span class="badge bg-success ms-1 d-none d-md-inline">Con ruta asignada</span>
+            {% else %}
+              <a href="{% url 'visitas:iniciar_visita_sin_ruta' doctor.id %}"
+                 class="btn btn-outline-warning btn-sm">Iniciar Visita</a>
+            {% endif %}
+          {% endif %}
+
+          <!-- 🔹 Modal trigger -->
+          <a href="#"
+             class="btn btn-outline-info btn-sm"
+             data-action="open-presc"
+             data-doctor-id="{{ doctor.id }}">
+            Prescripciones
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ===================================================== -->
+<!-- 🔹 MODAL PRESCRIPCIONES -->
+<!-- ===================================================== -->
+<div class="modal fade" id="prescModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Prescripciones</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body" id="prescModalBody">
+        <div class="text-center text-muted py-5">Cargando…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  /* ===== Filtro local (máx. 10 resultados visibles) ===== */
+  const input = document.getElementById("filtroDoctor");
+  const tbody = document.getElementById("tablaDoctores").querySelector("tbody");
+  const filas = Array.from(tbody.querySelectorAll("tr"));
+
+  function aplicarFiltro() {
+    const filtro = (input.value || "").toLowerCase();
+    let visibles = 0;
+    filas.forEach(tr => {
+      const texto = tr.textContent.toLowerCase();
+      const show = texto.includes(filtro) && visibles < 10;
+      tr.style.display = show ? "" : "none";
+      if (show) visibles++;
+    });
+  }
+
+  aplicarFiltro();
+  input.addEventListener("input", aplicarFiltro);
+
+  /* ===== Modal Prescripciones (AJAX) ===== */
+  const modalEl = document.getElementById('prescModal');
+  const modalBody = document.getElementById('prescModalBody');
+  let bsModal;
+
+  function ensureModal() {
+    if (!bsModal) bsModal = new bootstrap.Modal(modalEl);
+    return bsModal;
+  }
+
+  async function openPresc(doctorId) {
+    modalBody.innerHTML = '<div class="text-center text-muted py-5">Cargando…</div>';
+    ensureModal().show();
+
+    try {
+      const resp = await fetch(`/doctores/prescripciones/${doctorId}/`, { credentials: 'same-origin' });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const html = await resp.text();
+      modalBody.innerHTML = html;
+    } catch (err) {
+      modalBody.innerHTML = `
+        <div class="alert alert-danger">
+          No se pudo cargar la información. ${err.message}
+        </div>`;
+    }
+  }
+
+  document.addEventListener('click', (ev) => {
+    const btn = ev.target.closest('[data-action="open-presc"]');
+    if (!btn) return;
+    ev.preventDefault();
+    const id = btn.getAttribute('data-doctor-id');
+    if (id) openPresc(id);
+  });
+});
+</script>
+{% endblock %}

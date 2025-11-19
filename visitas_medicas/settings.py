@@ -1,4 +1,3 @@
-# visitas_medicas/settings.py
 from pathlib import Path
 import os
 import dj_database_url
@@ -8,36 +7,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # =========================
 # Seguridad / Entorno
 # =========================
-# En PROD usa SECRET_KEY desde variables de entorno (Railway → Variables)
 SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-unsafe-key")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = [
-    "127.0.0.1", "localhost",
-    "visitas-copias-production.up.railway.app"
-    "https://*.railway.app",
-    # Si prefieres permitir cualquier subdominio de Railway:
-    # ".railway.app",
-]
+# Hosts permitidos
+ALLOWED_HOSTS = os.getenv(
+    "ALLOWED_HOSTS",
+    "127.0.0.1,localhost,visitas-copias-production.up.railway.app,.railway.app"
+).split(",")
 
 CSRF_TRUSTED_ORIGINS = [
-    "visitas-copias-production.up.railway.app"
+    "https://visitas-copias-production.up.railway.app",
     "https://*.railway.app",
 ]
 
-# Detrás de proxy (Railway)
+# Necesario para proxies HTTPS
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
-# Cookies seguras (ajusta SAMESITE según tu caso)
-# - Si NO embebes el sitio en WebViews/iframes de otro dominio → Lax (recomendado)
-# - Si SÍ embebes (cross-site) → CSRF_COOKIE_SAMESITE="None"
+# Cookies seguras
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = False  # True bloquearía lectura JS; suele quedar False
+CSRF_COOKIE_HTTPONLY = False
 
-# Vista amigable de fallo CSRF
 CSRF_FAILURE_VIEW = "apps.usuarios.views.csrf_failure"
 
 # =========================
@@ -54,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "apps.usuarios",
     "apps.doctores",
     "apps.asistencia",
@@ -99,7 +93,10 @@ WSGI_APPLICATION = "visitas_medicas.wsgi.application"
 # Base de datos (Railway)
 # =========================
 DATABASES = {
-    "default": dj_database_url.config(default=os.environ.get("DATABASE_URL"))
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL"),
+        conn_max_age=600,
+    )
 }
 
 # =========================
@@ -127,7 +124,7 @@ USE_L10N = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
+
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-CSRF_FAILURE_VIEW = 'apps.usuarios.views.csrf_failure'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -14,15 +14,15 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
     "127.0.0.1", "localhost",
-    "visitasmedicasdiphasac-production.up.railway.app",
+    "visitas-copias-production.up.railway.app"
+    "https://*.railway.app",
     # Si prefieres permitir cualquier subdominio de Railway:
     # ".railway.app",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://visitasmedicasdiphasac-production.up.railway.app",
-    # Si usas subdominios múltiples en Railway:
-    # "https://*.railway.app",
+    "visitas-copias-production.up.railway.app"
+    "https://*.railway.app",
 ]
 
 # Detrás de proxy (Railway)

@@ -17,6 +17,8 @@ from django.contrib.auth import get_user_model
 import json
 from django.db import transaction
 from types import SimpleNamespace
+from django.utils.dateparse import parse_datetime
+
 
 @login_required
 def iniciar_visita(request, ruta_id=None, doctor_id=None):
@@ -66,90 +68,125 @@ def iniciar_visita(request, ruta_id=None, doctor_id=None):
 
 @login_required
 def agregar_productos(request):
+    """
+    Pantalla de visita comercial en curso.
+
+    - Usa el borrador (draft) guardado en sesión.
+    - Permite agregar / eliminar productos (se guardan en draft["entregas"]).
+    - Al finalizar, redirige a finalizar_visita, donde se crea Visita + DetalleVisita.
+    """
     from .draft import get_draft, save_draft
+
     draft = get_draft(request)
     if not draft:
-        messages.error(request, "No se ha iniciado una visita")
+        messages.error(request, "No se ha iniciado una visita.")
         return redirect('visitas:gestionar_visitas_medicas')
 
-    productos_presentados_ids = draft.get("productos_presentados", [])
-    entregas_draft = draft.get("entregas", [])
+    # Aseguramos claves básicas en el borrador
+    entregas = draft.get("entregas", [])
     comentarios = draft.get("comentarios", "")
-
-    productos_promocionales = Producto.objects.filter(tipo_producto='promocional')
-    productos_muestra = Producto.objects.filter(tipo_producto='muestra')
-    productos_merch = Producto.objects.filter(tipo_producto='merch')
-
-    productos_presentados_qs = Producto.objects.filter(id__in=productos_presentados_ids)
-
-    imagen_productos = {
-        # conserva tu mapeo existente producto → nombre de imagen
-    }
+    draft.setdefault("productos_presentados", [])  # para compatibilidad con finalizar_visita
+    draft["entregas"] = entregas
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
 
-        # Checkboxes de presentados
-        nuevos_presentados = request.POST.getlist('productos_presentados')
-        draft["productos_presentados"] = [int(pid) for pid in nuevos_presentados]
+        # --- 1) Agregar producto como ítem de la visita ---
+        if accion == 'agregar_item':
+            producto_id = request.POST.get('producto_id')
+            cantidad_raw = request.POST.get('cantidad') or "1"
 
-        # Entrega
-        if accion == 'agregar_entrega':
-            producto_id = request.POST.get('producto_entrega')
-            cantidad = request.POST.get('cantidad_entrega')
-            tipo_entrega = request.POST.get('tipo_entrega')
             try:
-                if producto_id and cantidad and tipo_entrega:
-                    pid = int(producto_id); cant = int(cantidad)
-                    if cant > 0:
-                        entregas = draft.get("entregas", [])
-                        entregas.append({
-                            "producto_id": pid,
-                            "cantidad": cant,
-                            "tipo_entrega": tipo_entrega
-                        })
-                        draft["entregas"] = entregas
-                        messages.success(request, "Entrega añadida.")
-                    else:
-                        messages.warning(request, "La cantidad debe ser mayor a 0.")
-            except ValueError:
-                messages.warning(request, "Datos de entrega inválidos.")
+                pid = int(producto_id) if producto_id else None
+                cantidad = int(cantidad_raw)
+            except (TypeError, ValueError):
+                pid = None
+                cantidad = 0
 
-        # Comentarios
-        draft["comentarios"] = request.POST.get('comentarios', '')[:5000]
-        save_draft(request, draft)
+            if pid and cantidad > 0:
+                # correlativo interno para poder eliminar después
+                next_id = draft.get("next_entrega_id", 1)
+                entregas.append({
+                    "id": next_id,
+                    "producto_id": pid,
+                    "cantidad": cantidad,
+                    "tipo_entrega": "comercial",  # único tipo en el nuevo flujo
+                })
+                draft["next_entrega_id"] = next_id + 1
+                draft["entregas"] = entregas
+                messages.success(request, "Producto agregado a la visita.")
+            else:
+                messages.warning(request, "Debes seleccionar un producto y una cantidad válida.")
 
-        # Acciones de flujo
-        if accion == 'finalizar':
+            # Guardar comentario si el usuario escribió algo
+            draft["comentarios"] = request.POST.get('comentarios', comentarios)[:5000]
+            save_draft(request, draft)
+            return redirect('visitas:agregar_productos')
+
+        # --- 2) Eliminar ítem de la visita ---
+        elif accion == 'eliminar_item':
+            detalle_id = request.POST.get('detalle_id')
+            try:
+                det_id = int(detalle_id)
+                entregas = [e for e in entregas if e.get("id") != det_id]
+                draft["entregas"] = entregas
+                messages.info(request, "Producto eliminado de la visita.")
+            except (TypeError, ValueError):
+                messages.warning(request, "No se pudo eliminar el producto seleccionado.")
+
+            draft["comentarios"] = request.POST.get('comentarios', comentarios)[:5000]
+            save_draft(request, draft)
+            return redirect('visitas:agregar_productos')
+
+        # --- 3) Finalizar visita ---
+        elif accion == 'finalizar':
+            draft["comentarios"] = request.POST.get('comentarios', comentarios)[:5000]
+            save_draft(request, draft)
             return redirect('visitas:finalizar_visita')
-        if accion == 'cancelar':
-            return redirect('visitas:cancelar_visita')
 
-        return redirect('visitas:agregar_productos')
-    # IDs de productos usados en las entregas del borrador
-    entrega_ids = [e.get("producto_id") for e in entregas_draft if e.get("producto_id")]
+    # =======================
+    #   GET o POST ya redirigido
+    # =======================
+
+    # Productos para el combo (filtro por nombre / línea en el template)
+    productos = Producto.objects.all().order_by('nombre')
+
+    # Líneas / categorías distintas para el filtro
+    lineas = (
+        Producto.objects
+        .exclude(categoria__isnull=True)
+        .exclude(categoria__exact="")
+        .values_list('categoria', flat=True)
+        .distinct()
+        .order_by('categoria')
+    )
+
+    # Construir "detalles" a partir de las entregas del draft
+    entrega_ids = [e.get("producto_id") for e in entregas if e.get("producto_id")]
     productos_map = {
-    p.id: {"nombre": p.nombre, "presentacion": getattr(p, "presentacion", "")}
-    for p in Producto.objects.filter(id__in=entrega_ids)
+        p.id: p for p in Producto.objects.filter(id__in=entrega_ids)
     }
 
+    detalles = []
+    for e in entregas:
+        prod = productos_map.get(e.get("producto_id"))
+        if not prod:
+            continue
+        detalles.append(
+            SimpleNamespace(
+                id=e.get("id"),
+                producto=prod,
+                cantidad=e.get("cantidad"),
+            )
+        )
 
     return render(request, 'visitas/agregar_productos.html', {
         "draft": draft,
-        "productos_promocionales": productos_promocionales,
-        "productos_muestra": productos_muestra,
-        "productos_merch": productos_merch,
-        "productos_presentados": productos_presentados_qs,
-        "productos_presentados_ids": productos_presentados_ids,
-        "entregas": entregas_draft,
+        "productos": productos,
+        "lineas": lineas,
+        "detalles": detalles,
         "comentarios": comentarios,
-        "imagen_productos": imagen_productos,
-        "producto_nombres": productos_map,
     })
-
-# ……………………………………………………………………………………………………………………………
-# (Resto de tus vistas originales SIN CAMBIOS)
-# ……………………………………………………………………………………………………………………………
 
 @login_required
 def gestionar_visitas_medicas(request):
@@ -253,115 +290,63 @@ def gestionar_visitas_medicas(request):
 
 @login_required
 def finalizar_visita(request):
-    # importa helpers del draft (¡ya actualizado!)
-    from .draft import get_draft, clear_draft, get_ruta_id
+    from .draft import get_draft, clear_draft
 
     draft = get_draft(request)
     if not draft:
-        messages.error(request, "No hay borrador para finalizar.")
+        messages.error(request, "No hay una visita en curso para finalizar.")
         return redirect('visitas:gestionar_visitas_medicas')
 
-    if not draft.get("doctor_id"):
-        messages.error(request, "Borrador inválido: falta doctor.")
-        return redirect('visitas:agregar_productos')
+    # 1) Tomamos la fecha de inicio del draft (string ISO) y la convertimos a datetime
+    fecha_inicio_str = draft.get("fecha_inicio_iso")
+    fecha_inicio = parse_datetime(fecha_inicio_str) if fecha_inicio_str else timezone.now()
+
+    # 2) Definimos fecha_final = ahora
+    fecha_final = timezone.now()
+
+    # 3) Calculamos la duración directo (fin - inicio)
+    delta = fecha_final - fecha_inicio
+    if delta.total_seconds() < 0:
+        delta = timedelta(0)  # por si algún tema de TZ/microsegundos la deja negativa
 
     try:
         with transaction.atomic():
-            # --- 1) Crear la visita real ---
+            # --- 4) Crear la visita real con TODO ya calculado ---
             visita = Visita.objects.create(
                 usuario=request.user,
                 doctor_id=draft["doctor_id"],
-                ruta_id=draft.get("ruta_id"),  # puede venir o no; no es obligatorio
-                fecha_inicio=draft.get("fecha_inicio_iso", timezone.now()),
+                ruta_id=draft.get("ruta_id"),
+                fecha_inicio=fecha_inicio,
+                fecha_final=fecha_final,
+                duracion=delta,
                 ubicacion_inicio=draft.get("ubicacion_inicio") or "",
                 comentarios=draft.get("comentarios") or "",
-                fecha_final=timezone.now(),
             )
 
-            # --- 2) Duración (si tu modelo la soporta) ---
-            try:
-                if hasattr(visita, "calcular_duracion"):
-                    visita.duracion = visita.calcular_duracion()
-                    visita.save(update_fields=["duracion"])
-            except Exception:
-                pass
-
-            # --- 3) Productos presentados ---
-            presentados = [
-                ProductoPresentado(visita=visita, producto_id=pid)
-                for pid in draft.get("productos_presentados", [])
-                if pid
-            ]
-            if presentados:
-                ProductoPresentado.objects.bulk_create(
-                    presentados, ignore_conflicts=True
+            # --- 5) Crear detalles desde el borrador ---
+            for prod_id in draft.get("productos_presentados", []):
+                DetalleVisita.objects.create(
+                    visita=visita,
+                    producto_id=prod_id,
+                    cantidad=1,
+                    tipo_entrega="comercial",
                 )
 
-            # --- 4) Entregas (muestras / merch) ---
-            entregas_objs = []
-            for e in draft.get("entregas", []):
-                try:
-                    entregas_objs.append(
-                        DetalleVisita(
-                            visita=visita,
-                            producto_id=int(e["producto_id"]),
-                            cantidad=int(e["cantidad"]),
-                            tipo_entrega=e.get("tipo_entrega"),  # "muestra" o "merch"
-                        )
-                    )
-                except Exception:
-                    continue
-            if entregas_objs:
-                DetalleVisita.objects.bulk_create(entregas_objs)
+            for entrega in draft.get("entregas", []):
+                DetalleVisita.objects.create(
+                    visita=visita,
+                    producto_id=entrega["producto_id"],
+                    cantidad=entrega.get("cantidad", 1),
+                    tipo_entrega=entrega.get("tipo_entrega", "comercial"),
+                )
 
-            # --- 5) Actualizar la ruta asociada (si corresponde) ---
-            try:
-                # Prioriza ruta_id del draft; si no hay, usará ruta_sugerida_id
-                ruta_id = get_ruta_id(request)
-
-                ruta = None
-                if ruta_id:
-                    ruta = (
-                        Ruta.objects.select_for_update()
-                        .filter(id=ruta_id)
-                        .first()
-                    )
-
-                # Si por algún motivo no se encontró, no bloqueamos el flujo
-                if ruta:
-                    for _campo in ("estado", "estatus", "status"):
-                        if hasattr(ruta, _campo):
-                            setattr(ruta, _campo, "completado")
-                            break
-
-                    # Sella fecha real de cobertura si existe el campo
-                    if hasattr(ruta, "fecha_visita_real") and not ruta.fecha_visita_real:
-                        ruta.fecha_visita_real = timezone.localdate(visita.fecha_final)
-
-                    ruta.save()
-
-                    # Si tu modelo tiene lógica adicional
-                    if hasattr(ruta, "actualizar_estatus"):
-                        try:
-                            ruta.actualizar_estatus()
-                        except Exception:
-                            pass
-
-            except Exception:
-                # Nunca romper el cierre de visita por un problema con rutas
-                pass
-
-    except Exception as ex:
-        messages.error(request, f"No se pudo finalizar la visita: {ex}")
-        return redirect('visitas:agregar_productos')
-
-    # --- 6) Limpiar draft DESPUÉS del commit y redirigir a gestión ---
-    def _post_commit():
         clear_draft(request)
-        messages.success(request, "Visita finalizada y ruta marcada como completada.")
-    transaction.on_commit(_post_commit)
+        messages.success(request, "Visita finalizada correctamente.")
+        return redirect('visitas:gestionar_visitas_medicas')
 
-    return redirect('visitas:gestionar_visitas_medicas')
+    except Exception as e:
+        messages.error(request, f"Ocurrió un error al finalizar la visita: {e}")
+        return redirect('visitas:agregar_productos')
 
 
 @login_required

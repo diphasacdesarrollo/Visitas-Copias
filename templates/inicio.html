@@ -34,25 +34,44 @@
 </div>
 
 <div class="container text-center mt-4">
-    <div class="d-flex justify-content-center gap-3">
-        <a href="{% url 'registrar_asistencia' %}" class="btn btn-primary btn-lg">
-            Registrar Asistencia
-        </a>
-        <a href="{% url 'crear_ruta' %}" class="btn btn-primary btn-lg">
-            Gestionar Rutas
-        </a>
-        <a href="{% url 'visitas:gestionar_visitas_medicas' %}" class="btn btn-primary btn-lg">
-            Gestionar Visitas
-        </a>
-        <a href="{% url 'visitas:ver_historial' %}" class="btn btn-primary btn-lg">
-            Historial de Visitas
-        </a>
-        <a href="https://vadamecum-2025-diphasac.netlify.app/" class="btn btn-primary btn-lg">
-            Catálogo VADAMECUM
-        </a>
-        <a href="https://diphasacstock.netlify.app/index.html" class="btn btn-primary btn-lg">
-            STOCK DISPONIBLE
-        </a>
+    <div class="row g-3 justify-content-center">
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <a href="{% url 'registrar_asistencia' %}" class="btn btn-primary btn-lg w-100 menu-btn">
+                Registrar Asistencia
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <a href="{% url 'crear_ruta' %}" class="btn btn-primary btn-lg w-100 menu-btn">
+                Gestionar Rutas
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <a href="{% url 'visitas:gestionar_visitas_medicas' %}" class="btn btn-primary btn-lg w-100 menu-btn">
+                Gestionar Visitas
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <a href="{% url 'visitas:ver_historial' %}" class="btn btn-primary btn-lg w-100 menu-btn">
+                Historial de Visitas
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <a href="https://vadamecum-2025-diphasac.netlify.app/" class="btn btn-primary btn-lg w-100 menu-btn">
+                Catálogo VADAMECUM
+            </a>
+        </div>
+
+        <div class="col-12 col-sm-6 col-md-4 col-lg-2">
+            <a href="https://diphasacstock.netlify.app/index.html" class="btn btn-primary btn-lg w-100 menu-btn">
+                STOCK DISPONIBLE
+            </a>
+        </div>
+
     </div>
 </div>
 
@@ -64,28 +83,22 @@
 
         <!-- FLYER 1 -->
         <div class="col-md-5 mb-3">
-            <button type="button"
-                    class="btn p-0 border-0 bg-transparent w-100"
-                    data-bs-toggle="modal"
-                    data-bs-target="#flyerNayflexModal">
+            <button type="button" class="btn p-0 border-0 bg-transparent w-100" data-bs-toggle="modal"
+                data-bs-target="#flyerNayflexModal">
                 <div class="card shadow-sm border-0">
                     <img src="https://res.cloudinary.com/diugppuuf/image/upload/Ibulcam_Promo_shob9v.jpg"
-                         class="img-fluid rounded"
-                         alt="Promoción Nayflex">
+                        class="img-fluid rounded" alt="Promoción Nayflex">
                 </div>
             </button>
         </div>
 
         <!-- FLYER 2 -->
         <div class="col-md-5 mb-3">
-            <button type="button"
-                    class="btn p-0 border-0 bg-transparent w-100"
-                    data-bs-toggle="modal"
-                    data-bs-target="#flyerGripamaxModal">
+            <button type="button" class="btn p-0 border-0 bg-transparent w-100" data-bs-toggle="modal"
+                data-bs-target="#flyerGripamaxModal">
                 <div class="card shadow-sm border-0">
                     <img src="https://res.cloudinary.com/diugppuuf/image/upload/IbuDuo-Promo_caz1mr.jpg"
-                         class="img-fluid rounded"
-                         alt="Promoción Gripamax">
+                        class="img-fluid rounded" alt="Promoción Gripamax">
                 </div>
             </button>
         </div>
@@ -94,41 +107,41 @@
 </div>
 <!-- MODAL FLYER NAYFLEX -->
 <div class="modal fade" id="flyerNayflexModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
 
-      <div class="modal-header">
-        <h5 class="modal-title">Promoción Nayflex</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+            <div class="modal-header">
+                <h5 class="modal-title">Promoción Nayflex</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
 
-      <div class="modal-body text-center">
-        <img src="https://res.cloudinary.com/diugppuuf/image/upload/Ibulcam_Promo_shob9v.jpg"
-             class="img-fluid rounded">
-      </div>
+            <div class="modal-body text-center">
+                <img src="https://res.cloudinary.com/diugppuuf/image/upload/Ibulcam_Promo_shob9v.jpg"
+                    class="img-fluid rounded">
+            </div>
 
+        </div>
     </div>
-  </div>
 </div>
 
 
 <!-- MODAL FLYER GRIPAMAX -->
 <div class="modal fade" id="flyerGripamaxModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
 
-      <div class="modal-header">
-        <h5 class="modal-title">Promoción Gripamax</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
+            <div class="modal-header">
+                <h5 class="modal-title">Promoción Gripamax</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
 
-      <div class="modal-body text-center">
-        <img src="https://res.cloudinary.com/diugppuuf/image/upload/IbuDuo-Promo_caz1mr.jpg"
-             class="img-fluid rounded">
-      </div>
+            <div class="modal-body text-center">
+                <img src="https://res.cloudinary.com/diugppuuf/image/upload/IbuDuo-Promo_caz1mr.jpg"
+                    class="img-fluid rounded">
+            </div>
 
+        </div>
     </div>
-  </div>
 </div>
 
 

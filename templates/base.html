@@ -2,6 +2,7 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Sistema de Visitas Médicas{% endblock %}</title>
@@ -9,84 +10,177 @@
     <!-- Responsive -->
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Favicon servido por WhiteNoise + Manifest -->
+    <!-- Favicon -->
     <link rel="icon" href="{% static 'img/favicon.ico' %}">
 
-    <!-- CSS (CDN) -->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
 
     <style>
-        @media (max-width: 767px) { .solo-pc { display: none !important; } }
+        @media (max-width: 767px) {
+            .solo-pc {
+                display: none !important;
+            }
+        }
+
+        /* NAVBAR CORPORATIVO */
+        .navbar-custom {
+            background-color: #d9f6ff !important;
+            /* mismo color del contenedor */
+        }
+
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: #006aff !important;
+            /* azul de tus botones */
+            font-weight: 600;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #004bbd !important;
+            /* hover elegante */
+        }
     </style>
+
+    <style>
+        @media (max-width: 767px) {
+            .solo-pc {
+                display: none !important;
+            }
+        }
+
+        /* NAVBAR alineado al bloque "Bienvenido" */
+        .navbar-custom {
+            background-color: var(--bs-info-bg-subtle) !important;
+            /* mismo fondo que el alert-info */
+        }
+
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: var(--bs-info-text) !important;
+            /* mismo color de texto que el alert-info */
+            font-weight: 600;
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: #033640 !important;
+            /* un poquito más oscuro para hover */
+        }
+    </style>
+
+
 </head>
+
+
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <!-- Si quieres logo:
-        <a class="navbar-brand d-flex align-items-center" href="{% url 'inicio' %}">
-          <img src="{% static 'img/logo.png' %}" alt="Logo" height="24" class="me-2">
-          Inicio
-        </a>
-        -->
-        <a class="navbar-brand" href="{% url 'inicio' %}">Inicio</a>
+    <nav class="navbar navbar-expand-lg navbar-light navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'inicio' %}">
+                <img src="https://res.cloudinary.com/drf02su75/image/upload/LOGO_DIPHASAC_AZUL_yjjvfp.png"
+                    alt="Diphasac" style="height: 38px; width: auto; object-fit: contain; margin-right: 10px;">
+            </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <a class="navbar-brand" href="{% url 'inicio' %}">Inicio</a>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                {% if request.user.is_authenticated %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+
+                    <!-- Inicio -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'inicio' %}">Inicio</a>
+                    </li>
+
+                    <!-- Registrar asistencia -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'registrar_asistencia' %}">Asistencia</a>
+                    </li>
+
+                    <!-- Gestionar rutas -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'crear_ruta' %}">Rutas</a>
+                    </li>
+
+                    <!-- Gestionar visitas -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'visitas:gestionar_visitas_medicas' %}">Visitas</a>
+                    </li>
+
+                    <!-- Historial -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'visitas:ver_historial' %}">Historial</a>
+                    </li>
+
+                    <!-- Catálogo -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://vadamecum-2025-diphasac.netlify.app/" target="_blank">
+                            Catálogo
+                        </a>
+                    </li>
+
+                    {% if request.user.is_authenticated %}
                     {% if request.user.is_superuser %}
-                        <li class="nav-item solo-pc">
-                            <a class="nav-link" href="{% url 'admin:index' %}">Panel Admin</a>
-                        </li>
+                    <li class="nav-item solo-pc">
+                        <a class="nav-link" href="{% url 'admin:index' %}">Panel Admin</a>
+                    </li>
                     {% endif %}
 
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'cambiar_password' %}">Cambiar contraseña</a>
                     </li>
+
                     <li class="nav-item">
                         <form id="logout-form" action="{% url 'logout' %}" method="post" style="display: inline;">
                             {% csrf_token %}
-                            <a href="#" class="nav-link text-white" onclick="document.getElementById('logout-form').submit(); return false;">Cerrar sesión</a>
+                            <a href="#" class="nav-link"
+                                onclick="document.getElementById('logout-form').submit(); return false;">
+                                Cerrar sesión
+                            </a>
                         </form>
                     </li>
-                {% else %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a></li>
-                {% endif %}
-            </ul>
-        </div>
-    </div>
-</nav>
 
-<div class="container mt-3">
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show mensaje-temporal" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Iniciar sesión</a>
+                    </li>
+                    {% endif %}
+
+                </ul>
+
             </div>
+        </div>
+    </nav>
+
+    <div class="container mt-3">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mensaje-temporal" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
         {% endfor %}
-    {% endif %}
-</div>
+        {% endif %}
+    </div>
 
-<div class="container mt-4">
-    {% block content %}{% endblock %}
-</div>
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    setTimeout(function () {
-        document.querySelectorAll('.mensaje-temporal').forEach(alerta => {
-            alerta.classList.remove('show');
-            alerta.classList.add('fade');
-            setTimeout(() => alerta.remove(), 500);
-        });
-    }, 1000);
-</script>
-{% block extra_js %}{% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        setTimeout(function () {
+            document.querySelectorAll('.mensaje-temporal').forEach(alerta => {
+                alerta.classList.remove('show');
+                alerta.classList.add('fade');
+                setTimeout(() => alerta.remove(), 500);
+            });
+        }, 1000);
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
+
 </html>

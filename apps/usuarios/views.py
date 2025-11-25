@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from .forms import CustomPasswordChangeForm
-
+from django.contrib.auth import update_session_auth_hash
 
 @login_required
 def cambiar_password(request):
@@ -14,6 +14,9 @@ def cambiar_password(request):
             user.must_change_password = False
             user.save()
 
+            # 🔒 Mantener la sesión activa con la nueva contraseña
+            update_session_auth_hash(request, user)
+
             messages.success(request, 'Contraseña actualizada con éxito.')
             return redirect('inicio')
         else:
@@ -22,6 +25,7 @@ def cambiar_password(request):
         form = CustomPasswordChangeForm(request.user)
 
     return render(request, 'usuarios/cambiar_password.html', {'form': form})
+
 
 
 @login_required

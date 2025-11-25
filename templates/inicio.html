@@ -76,73 +76,91 @@
 </div>
 
 <!-- BLOQUE DE FLYERS -->
-<div class="container mt-5">
+<div class="container my-5">
     <h4 class="text-center mb-4">Promociones Vigentes</h4>
 
-    <div class="row text-center justify-content-center">
+    <div id="promoCarousel" class="carousel slide" data-bs-ride="carousel">
+        <!-- PUNTITOS (INDICADORES) -->
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="0" class="active"
+                aria-current="true" aria-label="Flyer 1"></button>
+            <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="1"
+                aria-label="Flyer 2"></button>
+            <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="2"
+                aria-label="Flyer 3"></button>
+            <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="3"
+                aria-label="Flyer 4"></button>
+            <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="4"
+                aria-label="Flyer 5"></button>
+        </div>
 
-        <!-- FLYER 1 -->
-        <div class="col-md-5 mb-3">
-            <button type="button" class="btn p-0 border-0 bg-transparent w-100" data-bs-toggle="modal"
-                data-bs-target="#flyerNayflexModal">
+        <!-- SLIDES -->
+        <div class="carousel-inner">
+
+            <!-- 1. HIERROMAX 1 -->
+            <div class="carousel-item active">
+                <div class="card shadow-sm border-0">
+                    <img src="https://res.cloudinary.com/diugppuuf/image/upload/HIERROMAX-1_vdr33c.jpg"
+                         class="d-block w-100 img-fluid rounded"
+                         alt="Promoción Hierromax 1">
+                </div>
+            </div>
+
+            <!-- 2. HIERROMAX 2 -->
+            <div class="carousel-item">
+                <div class="card shadow-sm border-0">
+                    <img src="https://res.cloudinary.com/diugppuuf/image/upload/HIERROMAX-2_s8uhuq.jpg"
+                         class="d-block w-100 img-fluid rounded"
+                         alt="Promoción Hierromax 2">
+                </div>
+            </div>
+
+            <!-- 3. DIPHANATUR PROMO -->
+            <div class="carousel-item">
+                <div class="card shadow-sm border-0">
+                    <img src="https://res.cloudinary.com/diugppuuf/image/upload/DIPHANATUR-PROMO_qxxgd2.jpg"
+                         class="d-block w-100 img-fluid rounded"
+                         alt="Promoción Diphanatur">
+                </div>
+            </div>
+
+            <!-- 4. IBULCAM (ya existente) -->
+            <div class="carousel-item">
                 <div class="card shadow-sm border-0">
                     <img src="https://res.cloudinary.com/diugppuuf/image/upload/Ibulcam_Promo_shob9v.jpg"
-                        class="img-fluid rounded" alt="Promoción Nayflex">
+                         class="d-block w-100 img-fluid rounded"
+                         alt="Promoción Ibucalm">
                 </div>
-            </button>
-        </div>
+            </div>
 
-        <!-- FLYER 2 -->
-        <div class="col-md-5 mb-3">
-            <button type="button" class="btn p-0 border-0 bg-transparent w-100" data-bs-toggle="modal"
-                data-bs-target="#flyerGripamaxModal">
+            <!-- 5. IBU DUO (ya existente) -->
+            <div class="carousel-item">
                 <div class="card shadow-sm border-0">
                     <img src="https://res.cloudinary.com/diugppuuf/image/upload/IbuDuo-Promo_caz1mr.jpg"
-                        class="img-fluid rounded" alt="Promoción Gripamax">
+                         class="d-block w-100 img-fluid rounded"
+                         alt="Promoción Ibu Duo">
                 </div>
-            </button>
-        </div>
-
-    </div>
-</div>
-<!-- MODAL FLYER NAYFLEX -->
-<div class="modal fade" id="flyerNayflexModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">Promoción Nayflex</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body text-center">
-                <img src="https://res.cloudinary.com/diugppuuf/image/upload/Ibulcam_Promo_shob9v.jpg"
-                    class="img-fluid rounded">
             </div>
 
         </div>
+
+        <!-- CONTROLES IZQ / DER -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Anterior</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#promoCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Siguiente</span>
+        </button>
     </div>
 </div>
 
-
-<!-- MODAL FLYER GRIPAMAX -->
-<div class="modal fade" id="flyerGripamaxModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-
-            <div class="modal-header">
-                <h5 class="modal-title">Promoción Gripamax</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body text-center">
-                <img src="https://res.cloudinary.com/diugppuuf/image/upload/IbuDuo-Promo_caz1mr.jpg"
-                    class="img-fluid rounded">
-            </div>
-
-        </div>
-    </div>
-</div>
-
+<style>
+    #promoCarousel .carousel-item img {
+        max-height: 650px;
+        object-fit: contain;
+    }
+</style>
 
 {% endblock %}

@@ -8,7 +8,7 @@ from apps.productos.models import Producto
 from apps.rutas.models import Ruta
 from apps.doctores.models import Doctor
 from django.utils.timezone import now
-from django.db.models import Count, Avg, DurationField, ExpressionWrapper, F, OuterRef, Subquery, Exists, Value, CharField, IntegerField, Count, DateTimeField, Case, When
+from django.db.models import Count, Avg, DurationField, ExpressionWrapper, F, OuterRef, Subquery, Exists, Value, CharField, IntegerField, Count, DateTimeField, Case, When, Sum
 from django.core.paginator import Paginator
 from django.db.models.functions import ExtractIsoWeekDay, TruncWeek, Coalesce
 from django.db.models import Exists, OuterRef, Value, CharField, Case, When, IntegerField, BooleanField, Subquery, Count
@@ -362,7 +362,10 @@ def ver_historial(request):
     Muestra el historial completo de visitas, entregas y productos presentados.
     Compatible con el nuevo flujo: solo cuenta visitas finalizadas (fecha_final no nula).
     """
-    from django.db.models import Count, Avg, DurationField, ExpressionWrapper, F, Value, Case, When, IntegerField, Exists, OuterRef, Subquery, BooleanField
+    from django.db.models import (
+        Count, Avg, DurationField, ExpressionWrapper, F, Value, Case, When,
+        IntegerField, Exists, OuterRef, Subquery, BooleanField, Sum
+    )
     from django.db.models.functions import ExtractIsoWeekDay, Coalesce
     from datetime import date, datetime, timedelta
     from django.contrib.auth import get_user_model
@@ -400,7 +403,7 @@ def ver_historial(request):
     week_start = datetime.fromisocalendar(año, semana, 1).date()
     week_end = week_start + timedelta(days=6)
 
-    # ==== Visitas finalizadas ====
+    # ==== Visitas finalizadas (usuario_target) ====
     visitas_qs = (
         Visita.objects.filter(
             usuario=usuario_target,
@@ -408,7 +411,8 @@ def ver_historial(request):
             fecha_inicio__date__lte=week_end,
             fecha_final__isnull=False
         )
-        .annotate(duracion_min=ExpressionWrapper(F('fecha_final') - F('fecha_inicio'), output_field=DurationField()))
+        .annotate(duracion_min=ExpressionWrapper(F('fecha_final') - F('fecha_inicio'),
+                                                output_field=DurationField()))
         .order_by('-fecha_inicio')
     )
 
@@ -420,7 +424,8 @@ def ver_historial(request):
     total_productos_presentados = presentados_qs.count()
 
     tiempo_promedio = visitas_qs.aggregate(
-        prom=Avg(ExpressionWrapper(F('fecha_final') - F('fecha_inicio'), output_field=DurationField()))
+        prom=Avg(ExpressionWrapper(F('fecha_final') - F('fecha_inicio'),
+                                  output_field=DurationField()))
     )['prom'] or timedelta(minutes=0)
 
     # ==== Visitas por día ====
@@ -461,7 +466,7 @@ def ver_historial(request):
     next_year, next_week, _ = next_monday.isocalendar()
     weekpick_value = f"{año}-W{semana:02d}"
 
-    # ==== Cobertura mensual ====
+    # ==== Cobertura mensual (usuario_target) ====
     month_param = request.GET.get("month")
     if month_param:
         try:
@@ -517,12 +522,69 @@ def ver_historial(request):
     cobertura_pct = round((visitados_count / asignados_total) * 100, 1) if asignados_total else 0.0
     pendientes = max(asignados_total - visitados_count, 0)
 
-    # ==== Render ====
-    titulo_nombre = (
-        "Mi historial" if not is_supervisor
-        else f"Historial — {usuario_target.get_full_name() or usuario_target.username}"
-    )
+    # ==== RESUMEN GENERAL POR VISITADOR (vista gerente) ====
+    resumen_visitadores = []
+    if is_supervisor and not rep_id:
+        for v in visitadores_qs:
+            # Visitas finalizadas en la semana y mes
+            visitas_semana_v = Visita.objects.filter(
+                usuario=v,
+                fecha_inicio__date__gte=week_start,
+                fecha_inicio__date__lte=week_end,
+                fecha_final__isnull=False,
+            ).count()
 
+            visitas_mes_v = Visita.objects.filter(
+                usuario=v,
+                fecha_inicio__gte=first_month_day,
+                fecha_inicio__lt=next_month,
+                fecha_final__isnull=False,
+            ).count()
+
+            # Total de unidades entregadas en la semana
+            productos_semana_v = DetalleVisita.objects.filter(
+                visita__usuario=v,
+                visita__fecha_inicio__date__gte=week_start,
+                visita__fecha_inicio__date__lte=week_end,
+                visita__fecha_final__isnull=False,
+            ).aggregate(total=Sum('cantidad'))['total'] or 0
+
+            # Doctores asignados a ese visitador
+            asignados_v = Doctor.objects.filter(visitador_id=v.id).count()
+
+            # Doctores visitados en el mes
+            visitados_doctores_v = (
+                Visita.objects.filter(
+                    usuario=v,
+                    fecha_inicio__gte=first_month_day,
+                    fecha_inicio__lt=next_month,
+                    fecha_final__isnull=False,
+                )
+                .values('doctor_id')
+                .distinct()
+                .count()
+            )
+
+            cobertura_v = round((visitados_doctores_v / asignados_v) * 100, 1) if asignados_v else 0.0
+
+            resumen_visitadores.append({
+                "visitador": v,
+                "visitas_semana": visitas_semana_v,
+                "visitas_mes": visitas_mes_v,
+                "productos_semana": productos_semana_v,
+                "asignados_semana": asignados_v,
+                "cobertura": cobertura_v,
+            })
+
+    # ==== Título ====
+    if not is_supervisor:
+        titulo_nombre = "Mi historial"
+    elif rep_id:
+        titulo_nombre = usuario_target.get_full_name() or usuario_target.username
+    else:
+        titulo_nombre = "Resumen general"
+
+    # ==== Render ====
     return render(request, 'visitas/historial.html', {
         'titulo_nombre': titulo_nombre,
         'is_supervisor': is_supervisor,
@@ -536,6 +598,8 @@ def ver_historial(request):
         'año_siguiente': next_year,
         'weekpick_value': weekpick_value,
         'month_value': month_value,
+
+        # detalle actual (solo se usa cuando hay rep_id o es visitador)
         'visitas': visitas_qs,
         'detalles': detalles_qs,
         'presentados': presentados_qs,
@@ -552,4 +616,5 @@ def ver_historial(request):
         'cobertura_data': json.dumps([visitados_count, pendientes]),
         'top_doctores_labels': json.dumps(top_doctores_labels),
         'top_doctores_data': json.dumps(top_doctores_data),
+        'resumen_visitadores': resumen_visitadores,
     })

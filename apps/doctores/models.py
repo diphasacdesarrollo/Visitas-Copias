@@ -30,8 +30,8 @@ class Prescripcion(models.Model):
     producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
     rank_tam = models.PositiveIntegerField(verbose_name="Ranking por Tamaño de Mercado")
     ms_tam = models.FloatField(verbose_name="Market Share por Tamaño")
-    rank_trim = models.PositiveIntegerField(verbose_name="Ranking Trimestral")
-    ms_trim = models.FloatField(verbose_name="Market Share Trimestral")
+    rank_trim = models.PositiveIntegerField(verbose_name="Ranking Trimestral", null=True, blank=True)
+    ms_trim = models.FloatField(verbose_name="Market Share Trimestral", null=True, blank=True)
     fecha_registro = models.DateField(auto_now_add=True)
 
     class Meta:

@@ -53,4 +53,80 @@
     </div>
 </div>
 
+<!-- BLOQUE DE FLYERS -->
+<div class="container mt-5">
+    <h4 class="text-center mb-4">Promociones Vigentes</h4>
+
+    <div class="row text-center justify-content-center">
+
+        <!-- FLYER 1 -->
+        <div class="col-md-5 mb-3">
+            <button type="button"
+                    class="btn p-0 border-0 bg-transparent w-100"
+                    data-bs-toggle="modal"
+                    data-bs-target="#flyerNayflexModal">
+                <div class="card shadow-sm border-0">
+                    <img src="https://res.cloudinary.com/diugppuuf/image/upload/Ibulcam_Promo_shob9v.jpg"
+                         class="img-fluid rounded"
+                         alt="Promoción Nayflex">
+                </div>
+            </button>
+        </div>
+
+        <!-- FLYER 2 -->
+        <div class="col-md-5 mb-3">
+            <button type="button"
+                    class="btn p-0 border-0 bg-transparent w-100"
+                    data-bs-toggle="modal"
+                    data-bs-target="#flyerGripamaxModal">
+                <div class="card shadow-sm border-0">
+                    <img src="https://res.cloudinary.com/diugppuuf/image/upload/IbuDuo-Promo_caz1mr.jpg"
+                         class="img-fluid rounded"
+                         alt="Promoción Gripamax">
+                </div>
+            </button>
+        </div>
+
+    </div>
+</div>
+<!-- MODAL FLYER NAYFLEX -->
+<div class="modal fade" id="flyerNayflexModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Promoción Nayflex</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+        <img src="https://res.cloudinary.com/diugppuuf/image/upload/Ibulcam_Promo_shob9v.jpg"
+             class="img-fluid rounded">
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- MODAL FLYER GRIPAMAX -->
+<div class="modal fade" id="flyerGripamaxModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Promoción Gripamax</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center">
+        <img src="https://res.cloudinary.com/diugppuuf/image/upload/IbuDuo-Promo_caz1mr.jpg"
+             class="img-fluid rounded">
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 {% endblock %}

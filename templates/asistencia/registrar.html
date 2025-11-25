@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container mt-5">
-    <h2 class="text-center mb-4">📍 Registrar Asistencia</h2>
+    <h2 class="text-center mb-4">Registrar Asistencia</h2>
 
     {% if ultima_accion %}
         <p class="text-center text-muted">
@@ -58,21 +58,21 @@
   <thead class="table-light">
     <tr>
       <th>📆 Fecha Ingreso</th>
-      <th>🕐 Ingreso</th>
-      <th>📍 Ubicación Ingreso</th>
-      <th>📆 Fecha Salida</th>       <!-- NUEVO -->
+      <th>🕐 Hora Ingreso</th>
+      <th>📆 Fecha Salida</th>
       <th>🕔 Hora Salida</th>
-      <th>📍 Ubicación Salida</th>
     </tr>
   </thead>
   <tbody>
     {% for asistencia in asistencias_semana %}
     <tr>
+      <!-- Fecha ingreso -->
       <td>{{ asistencia.fecha_ingreso|date:"d/m/Y" }}</td>
-      <td>{{ asistencia.fecha_ingreso|date:"H:i:s" }}</td>
-      <td>{{ asistencia.ubicacion_ingreso|default:"—" }}</td>
 
-      <!-- NUEVO: fecha de salida -->
+      <!-- Hora ingreso -->
+      <td>{{ asistencia.fecha_ingreso|date:"H:i:s" }}</td>
+
+      <!-- Fecha salida -->
       <td>
         {% if asistencia.fecha_salida %}
           {{ asistencia.fecha_salida|date:"d/m/Y" }}
@@ -81,7 +81,7 @@
         {% endif %}
       </td>
 
-      <!-- ya estaba: hora de salida -->
+      <!-- Hora salida -->
       <td>
         {% if asistencia.fecha_salida %}
           {{ asistencia.fecha_salida|date:"H:i:s" }}
@@ -89,8 +89,6 @@
           —
         {% endif %}
       </td>
-
-      <td>{{ asistencia.ubicacion_salida|default:"—" }}</td>
     </tr>
     {% endfor %}
   </tbody>

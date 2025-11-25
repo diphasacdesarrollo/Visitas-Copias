@@ -39,14 +39,14 @@ def registrar_asistencia(request):
                 ubicacion_ingreso=ubicacion
             )
             messages.success(request, "Ingreso registrado correctamente.")
-            return redirect('inicio')
+            return redirect('registrar_asistencia')
 
         elif accion == 'salida' and ya_ingreso:
             asistencia_incompleta.fecha_salida = timezone.now()
             asistencia_incompleta.ubicacion_salida = ubicacion
             asistencia_incompleta.save()
             messages.success(request, "Salida registrada correctamente.")
-            return redirect('inicio')
+            return redirect('registrar_asistencia')
 
     # 🔄 Obtener semana a mostrar
     hoy = localtime().date()

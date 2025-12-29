@@ -5,8 +5,8 @@ from .models import Asistencia
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils.timezone import localtime
-from datetime import date
-
+from datetime import date, timedelta
+    
 @login_required
 def registrar_asistencia(request):
     usuario = request.user
@@ -62,12 +62,15 @@ def registrar_asistencia(request):
     else:
         año_iso, semana_iso, _ = hoy.isocalendar()
 
-    # 📅 Filtro de asistencias por semana
-    asistencias_semana = Asistencia.objects.filter(
-        usuario=usuario,
-        fecha_ingreso__week=semana_iso,
-        fecha_ingreso__year=año_iso
-    ).order_by('fecha_ingreso')
+  # 📅 Calcular rango real de la semana ISO (lunes a domingo)
+inicio_semana = date.fromisocalendar(año_iso, semana_iso, 1)  # lunes
+fin_semana = date.fromisocalendar(año_iso, semana_iso, 7)     # domingo
+
+asistencias_semana = Asistencia.objects.filter(
+    usuario=usuario,
+    fecha_ingreso__date__range=(inicio_semana, fin_semana)
+).order_by('fecha_ingreso')
+
 
     context = {
         'ya_ingreso': ya_ingreso,

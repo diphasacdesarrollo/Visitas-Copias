@@ -62,15 +62,14 @@ def registrar_asistencia(request):
     else:
         año_iso, semana_iso, _ = hoy.isocalendar()
 
-  # 📅 Calcular rango real de la semana ISO (lunes a domingo)
-inicio_semana = date.fromisocalendar(año_iso, semana_iso, 1)  # lunes
-fin_semana = date.fromisocalendar(año_iso, semana_iso, 7)     # domingo
+      # 📅 Calcular rango real de la semana ISO (lunes a domingo)
+    inicio_semana = date.fromisocalendar(año_iso, semana_iso, 1)  # lunes
+    fin_semana = date.fromisocalendar(año_iso, semana_iso, 7)     # domingo
 
-asistencias_semana = Asistencia.objects.filter(
-    usuario=usuario,
-    fecha_ingreso__date__range=(inicio_semana, fin_semana)
-).order_by('fecha_ingreso')
-
+    asistencias_semana = Asistencia.objects.filter(
+        usuario=usuario,
+        fecha_ingreso__date__range=(inicio_semana, fin_semana)
+    ).order_by('fecha_ingreso')
 
     context = {
         'ya_ingreso': ya_ingreso,

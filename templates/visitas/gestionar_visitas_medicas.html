@@ -2,7 +2,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-5">
+<div class="container-fluid mt-5 px-4">
   <h2 class="text-primary mb-4">📋 Rutas Programadas</h2>
 
   {% if rutas %}
@@ -53,8 +53,23 @@
                 <button class="btn btn-sm btn-secondary" disabled>✔ Completado</button>
               {% else %}
                 {% if ruta.id %}
-                  <a href="{% url 'visitas:iniciar_visita' ruta.id %}"
-                     class="btn btn-sm btn-success">Iniciar Visita</a>
+                                              <td class="text-center">
+                    <div class="d-flex justify-content-center gap-2 align-items-center">
+                        <a href="{% url 'visitas:iniciar_visita' ruta.id %}" class="btn btn-success btn-sm px-3">
+                            Iniciar Visita
+                        </a>
+
+                        <form method="post"
+                              action="{% url 'rutas:eliminar_ruta' ruta.id %}"
+                              style="margin: 0;"
+                              onsubmit="return confirm('¿Seguro que deseas eliminar esta ruta?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm px-3">
+                                Eliminar
+                            </button>
+                        </form>
+                    </div>
+                </td>
                 {% endif %}
               {% endif %}
             {% endwith %}

@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.db.models import Q
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.utils.timezone import localdate
 
 from apps.doctores.models import Doctor
@@ -169,7 +169,7 @@ def crear_ruta(request):
     # Inyección de datos a los objetos renderizados
     for d in doctores_page.object_list:
         info = estado_por_doctor.get(d.id)
-        d.ultimo_estatus    = (info or {}).get("estatus")          # ← estado real de rutas_ruta
+        d.ultimo_estatus    = (info or {}).get("estatus")
         d.fecha_ultima_ruta = (info or {}).get("fecha_visita")
         d.fecha_prox_ruta   = prox_por_doctor.get(d.id)
 
@@ -188,15 +188,30 @@ def crear_ruta(request):
         "hoy": hoy,
     }
 
-    # Parcial para AJAX
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         html = render_to_string("rutas/tabla_doctores.html", context, request=request)
         return JsonResponse({"html": html})
 
     resp = render(request, "rutas/crear_ruta.html", context)
 
-    # Log de performance
     t_total = (time.perf_counter() - t0_total) * 1000
     logger.warning("[PERF_VIEW] crear_ruta total %.1f ms (page %s, doctores %d)",
                    t_total, page_num, len(doctor_ids))
     return resp
+
+
+@login_required
+def eliminar_ruta(request, ruta_id):
+    if request.method != "POST":
+        return redirect('visitas:gestionar_visitas_medicas')
+
+    ruta = get_object_or_404(Ruta, id=ruta_id)
+
+    if not (request.user.is_superuser or getattr(request.user, "rol", "") == "supervisor"):
+        if ruta.usuario_id != request.user.id:
+            messages.error(request, "No tienes permiso para eliminar esta ruta.")
+            return redirect('visitas:gestionar_visitas_medicas')
+
+    ruta.delete()
+    messages.success(request, "Ruta eliminada correctamente.")
+    return redirect('visitas:gestionar_visitas_medicas')

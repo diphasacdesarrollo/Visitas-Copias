@@ -1,8 +1,7 @@
-# apps/doctores/urls.py
 from django.urls import path
 from .views import crear_doctor, gestionar_medicos, ver_prescripciones_doctor
 
-app_name = 'doctores'  # ← NECESARIO para usar {% url 'doctores:ver_prescripciones_doctor' %}
+app_name = 'doctores'
 
 urlpatterns = [
     path('nuevo-doctor/', crear_doctor, name='crear_doctor'),

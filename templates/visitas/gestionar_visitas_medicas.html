@@ -75,23 +75,28 @@
   <!-- ===================================================== -->
   <!-- 🔍 BUSCADOR DE MÉDICOS -->
   <!-- ===================================================== -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">🔍 Buscar Clientes</h4>
+    <a href="{% url 'doctores:crear_doctor' %}" class="btn btn-primary">
+        + Crear Cliente
+    </a>
+</div>
 
-  <h4 class="mb-3">🔍 Buscar Clientes</h4>
-  <input type="text" id="filtroDoctor" class="form-control mb-3" placeholder="Buscar por nombre o CMP">
+<input type="text" id="filtroDoctor" class="form-control mb-3" placeholder="Buscar por nombre o CMP">
 
-  <style>
+<style>
     .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle}
     .dot-verde{background:#16a34a}
     .dot-amarillo{background:#f59e0b}
     .dot-rojo{background:#ef4444}
-  </style>
+</style>
 
   <table class="table table-bordered table-hover align-middle" id="tablaDoctores">
     <thead class="table-light">
       <tr>
         <th>Cliente</th>
         <th class="d-none d-md-table-cell">RUC</th>
-        <th class="d-none d-md-table-cell">Canal</th>
+        <th class="d-none d-md-table-cell">Dirección</th>
         <th class="d-none d-md-table-cell">Visitas (mes)</th>
         <th class="d-none d-md-table-cell">Última visita</th>
         <th class="d-none d-md-table-cell">Estado</th>

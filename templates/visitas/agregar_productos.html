@@ -143,9 +143,17 @@
                     <a href="{% url 'visitas:gestionar_visitas_medicas' %}" class="btn btn-outline-secondary">
                         Cancelar / Volver
                     </a>
-                    <button type="submit" class="btn btn-success">
-                        ✅ Finalizar visita
-                    </button>
+                                    <div class="mt-3">
+                    <label class="form-label fw-bold">¿Se sacó pedido?</label>
+                    <div class="d-flex gap-2">
+                        <button type="submit" name="accion" value="finalizar_si" class="btn btn-success">
+                            Sí
+                        </button>
+                        <button type="submit" name="accion" value="finalizar_no" class="btn btn-outline-secondary">
+                            No
+                        </button>
+                    </div>
+                </div>
                 </div>
             </form>
         </div>

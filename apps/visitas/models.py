@@ -14,6 +14,7 @@ class Visita(models.Model):
     fecha_final = models.DateTimeField(blank=True, null=True)
     comentarios = models.TextField(blank=True, null=True)
     duracion = models.DurationField(null=True, blank=True)
+    se_genero_pedido = models.BooleanField(null=True, blank=True)
 
     def calcular_duracion(self):
         if self.fecha_inicio and self.fecha_final:

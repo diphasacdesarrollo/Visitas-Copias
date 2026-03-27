@@ -381,9 +381,29 @@ def ver_historial(request):
     visitadores_qs = User.objects.none()
 
     if is_supervisor:
-        visitadores_qs = User.objects.filter(rol="visitador").order_by("first_name", "last_name")
+        supervisores_visitadores = {
+            "edmundo.mamani": ["Susana.Ramos","maribel.grandez","cristian.barreda","jose.cerna","pedro.salazar","lupe.castro","karem.pariona"],
+            "alfredo.derutte": ["Susana.Ramos","maribel.grandez","cristian.barreda","jose.cerna","pedro.salazar","lupe.castro","karem.pariona","aneli.uriarte","jessica.mendoza","omar.quevedo","clara.risco","malena.gaona","jenifer.madrid","eleodora.rosas"],
+        }
+
+        visitadores_permitidos = supervisores_visitadores.get(user.username, [])
+
+        visitadores_qs = User.objects.filter(
+            rol="visitador",
+            username__in=visitadores_permitidos
+        ).order_by("first_name", "last_name")
+
         if rep_id:
-            usuario_target = get_object_or_404(User, id=rep_id, rol="visitador")
+            usuario_target = get_object_or_404(
+                User,
+                id=rep_id,
+                rol="visitador",
+                username__in=visitadores_permitidos
+            )
+
+
+
+
 
     # ==== Parámetros de semana ====
     hoy = timezone.localdate()

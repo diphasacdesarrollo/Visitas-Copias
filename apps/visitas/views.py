@@ -139,8 +139,16 @@ def agregar_productos(request):
             return redirect('visitas:agregar_productos')
 
         # --- 3) Finalizar visita ---
-        elif accion == 'finalizar':
+        # --- 3) Finalizar visita ---
+        elif accion == 'finalizar_si':
             draft["comentarios"] = request.POST.get('comentarios', comentarios)[:5000]
+            draft["se_genero_pedido"] = True
+            save_draft(request, draft)
+            return redirect('visitas:finalizar_visita')
+
+        elif accion == 'finalizar_no':
+            draft["comentarios"] = request.POST.get('comentarios', comentarios)[:5000]
+            draft["se_genero_pedido"] = False
             save_draft(request, draft)
             return redirect('visitas:finalizar_visita')
 
@@ -321,6 +329,7 @@ def finalizar_visita(request):
                 duracion=delta,
                 ubicacion_inicio=draft.get("ubicacion_inicio") or "",
                 comentarios=draft.get("comentarios") or "",
+                se_genero_pedido=draft.get("se_genero_pedido"),
             )
 
             # --- 5) Crear detalles desde el borrador ---

@@ -111,8 +111,8 @@
               <th class="col-num">Visitas<br>(semana)</th>
               <th class="col-num">Visitas<br>(mes)</th>
               <th class="col-num">Unidades<br>entregadas</th>
-              <th class="col-num">Clientes<br>asignados</th>
-              <th class="col-num">Cobertura<br>mes</th>
+              <th class="col-num">Pedidos<br>(Sí)</th>
+              <th class="col-num">Sin pedido<br>(No)</th>
               <th class="col-accion"></th>
             </tr>
           </thead>
@@ -123,26 +123,13 @@
               <td class="col-nombre">
                 {{ r.visitador.get_full_name|default:r.visitador.username }}
               </td>
-
               <!-- Números más angostos -->
               <td class="col-num">{{ r.visitas_semana }}</td>
               <td class="col-num">{{ r.visitas_mes }}</td>
               <td class="col-num">{{ r.productos_semana }}</td>
-              <td class="col-num">{{ r.asignados_semana }}</td>
-
-              <td class="col-num">
-                <span class="badge
-                  {% if r.cobertura >= 90 %}
-                    bg-success
-                  {% elif r.cobertura >= 70 %}
-                    bg-warning
-                  {% else %}
-                    bg-danger
-                  {% endif %}">
-                  {{ r.cobertura }}%
-                </span>
-              </td>
-
+              <td class="col-num">{{ r.pedidos_si }}</td>
+              <td class="col-num">{{ r.pedidos_no }}</td>
+         
               <!-- Botón detalle con ancho fijo -->
               <td class="col-accion">
                 <a href="?rep_id={{ r.visitador.id }}&semana={{ semana_actual }}&año={{ año_actual }}&month={{ month_value }}"
@@ -238,6 +225,7 @@
             <th>RUC</th>
             <th>Canal</th>
             <th>Fecha</th>
+            <th>Venta</th>
             <th>Comentario</th>
           </tr>
         </thead>
@@ -254,6 +242,15 @@
               {% endif %}
             </td>
             <td>{{ v.fecha_inicio|date:"d/m/Y H:i" }}</td>
+
+            <td>
+                {% if v.se_genero_pedido %}
+                    <span class="badge bg-success">Sí</span>
+                {% else %}
+                    <span class="badge bg-danger">No</span>
+                {% endif %}
+            </td>
+
             <td>{{ v.comentarios|default:"-" }}</td>
           </tr>
           {% endfor %}

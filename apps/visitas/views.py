@@ -578,31 +578,29 @@ def ver_historial(request):
                 visita__fecha_final__isnull=False,
             ).aggregate(total=Sum('cantidad'))['total'] or 0
 
-            # Doctores asignados a ese visitador
-            asignados_v = Doctor.objects.filter(visitador_id=v.id).count()
+            pedidos_si_v = Visita.objects.filter(
+                usuario=v,
+                fecha_inicio__date__gte=week_start,
+                fecha_inicio__date__lte=week_end,
+                fecha_final__isnull=False,
+                se_genero_pedido=True,
+            ).count()
 
-            # Doctores visitados en el mes
-            visitados_doctores_v = (
-                Visita.objects.filter(
-                    usuario=v,
-                    fecha_inicio__gte=first_month_day,
-                    fecha_inicio__lt=next_month,
-                    fecha_final__isnull=False,
-                )
-                .values('doctor_id')
-                .distinct()
-                .count()
-            )
-
-            cobertura_v = round((visitados_doctores_v / asignados_v) * 100, 1) if asignados_v else 0.0
+            pedidos_no_v = Visita.objects.filter(
+                usuario=v,
+                fecha_inicio__date__gte=week_start,
+                fecha_inicio__date__lte=week_end,
+                fecha_final__isnull=False,
+                se_genero_pedido=False,
+            ).count()
 
             resumen_visitadores.append({
                 "visitador": v,
                 "visitas_semana": visitas_semana_v,
                 "visitas_mes": visitas_mes_v,
                 "productos_semana": productos_semana_v,
-                "asignados_semana": asignados_v,
-                "cobertura": cobertura_v,
+                "pedidos_si": pedidos_si_v,
+                "pedidos_no": pedidos_no_v,
             })
 
     # ==== Título ====
